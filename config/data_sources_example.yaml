@@ -1,0 +1,200 @@
+# ═══════════════════════════════════════════════════════════
+#                  数据源配置文件示例
+#     快速启动：复制本文件为 data_sources.yaml 并启用需要的数据源
+# ═══════════════════════════════════════════════════════════
+
+data_sources:
+  # ───────────────────────────────────────────────────────
+  # 钢材行业数据源（基于AKShare）
+  # ───────────────────────────────────────────────────────
+
+  # 螺纹钢期货价格
+  rebar_future_price:
+    name: "螺纹钢期货价格"
+    type: "akshare"
+    enabled: true
+    function: "futures_main_sina"
+    params:
+      symbol: "RB0"
+    data_category: "price"
+    data_type: "future"
+    product: "rebar"
+
+  # 热轧卷板期货价格
+  hot_rolled_coil_future:
+    name: "热轧卷板期货"
+    type: "akshare"
+    enabled: true
+    function: "futures_main_sina"
+    params:
+      symbol: "HC0"
+    data_category: "price"
+    data_type: "future"
+    product: "hot_rolled_coil"
+
+  # 铁矿石期货
+  iron_ore_future:
+    name: "铁矿石期货"
+    type: "akshare"
+    enabled: true
+    function: "futures_main_sina"
+    params:
+      symbol: "I0"
+    data_category: "price"
+    data_type: "future"
+    product: "iron_ore"
+
+  # 焦炭期货
+  coke_future:
+    name: "焦炭期货"
+    type: "akshare"
+    enabled: true
+    function: "futures_main_sina"
+    params:
+      symbol: "J0"
+    data_category: "price"
+    data_type: "future"
+    product: "coke"
+
+  # 焦煤期货
+  coking_coal_future:
+    name: "焦煤期货"
+    type: "akshare"
+    enabled: true
+    function: "futures_main_sina"
+    params:
+      symbol: "JM0"
+    data_category: "price"
+    data_type: "future"
+    product: "coking_coal"
+
+  # ───────────────────────────────────────────────────────
+  # 有色金属数据源
+  # ───────────────────────────────────────────────────────
+
+  # 铜期货
+  copper_future:
+    name: "铜期货价格"
+    type: "akshare"
+    enabled: true
+    function: "futures_main_sina"
+    params:
+      symbol: "CU0"
+    data_category: "price"
+    data_type: "future"
+    product: "copper"
+
+  # 铝期货
+  aluminum_future:
+    name: "铝期货价格"
+    type: "akshare"
+    enabled: true
+    function: "futures_main_sina"
+    params:
+      symbol: "AL0"
+    data_category: "price"
+    data_type: "future"
+    product: "aluminum"
+
+  # 锌期货
+  zinc_future:
+    name: "锌期货价格"
+    type: "akshare"
+    enabled: false
+    function: "futures_main_sina"
+    params:
+      symbol: "ZN0"
+    data_category: "price"
+    data_type: "future"
+    product: "zinc"
+
+  # ───────────────────────────────────────────────────────
+  # 库存数据
+  # ───────────────────────────────────────────────────────
+
+  # 上期所仓单
+  shfe_warehouse:
+    name: "上期所仓单库存"
+    type: "akshare"
+    enabled: true
+    function: "get_shfe_warehouse"
+    params: {}
+    data_category: "inventory"
+    data_type: "exchange"
+
+  # 大商所仓单
+  dce_warehouse:
+    name: "大商所仓单库存"
+    type: "akshare"
+    enabled: true
+    function: "get_dce_warehouse"
+    params: {}
+    data_category: "inventory"
+    data_type: "exchange"
+
+  # ───────────────────────────────────────────────────────
+  # 产量数据
+  # ───────────────────────────────────────────────────────
+
+  # 粗钢产量
+  crude_steel_production:
+    name: "粗钢产量"
+    type: "akshare"
+    enabled: true
+    function: "macro_china_steel_production"
+    params: {}
+    data_category: "production"
+    product: "steel"
+
+  # ───────────────────────────────────────────────────────
+  # 宏观经济数据
+  # ───────────────────────────────────────────────────────
+
+  # PMI指数
+  pmi_index:
+    name: "PMI指数"
+    type: "akshare"
+    enabled: true
+    function: "macro_china_pmi"
+    params: {}
+    data_category: "macro"
+    data_type: "pmi"
+
+  # 工业增加值
+  industrial_production:
+    name: "工业增加值"
+    type: "akshare"
+    enabled: true
+    function: "macro_china_industrial_production"
+    params: {}
+    data_category: "macro"
+    data_type: "industrial_production"
+
+  # 固定资产投资
+  fixed_asset_investment:
+    name: "固定资产投资"
+    type: "akshare"
+    enabled: true
+    function: "macro_china_fixed_asset_investment"
+    params: {}
+    data_category: "macro"
+    data_type: "fixed_investment"
+
+# ═══════════════════════════════════════════════════════════
+# 全局配置
+# ═══════════════════════════════════════════════════════════
+global:
+  # 请求配置
+  request:
+    timeout: 30
+    retry: 3
+    retry_interval: 5
+
+  # 缓存配置
+  cache:
+    enabled: true
+    ttl: 3600
+
+  # 并发配置
+  concurrency:
+    max_workers: 5
