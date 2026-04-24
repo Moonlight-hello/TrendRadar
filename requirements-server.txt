@@ -1,0 +1,13 @@
+# TrendRadar Server 额外依赖
+# 基础依赖见 requirements.txt
+
+# Web 框架
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# Telegram Bot
+python-telegram-bot==20.7
+
+# 数据库
+# SQLite 是 Python 内置的，不需要额外安装
