@@ -1,0 +1,410 @@
+# 东方财富股吧平台配置示例
+# 用于通用平台适配框架
+
+platform:
+  id: eastmoney
+  name: eastmoney
+  display_name: "东方财富股吧 EastMoney Guba"
+  description: "中国最大的股票社区和财经信息平台"
+  website: "https://guba.eastmoney.com"
+
+api:
+  # API基础地址
+  base_url: "https://gbapi.eastmoney.com"
+
+  # Web基础地址
+  web_base_url: "https://guba.eastmoney.com"
+
+  # API端点定义（支持Jinja2模板语法）
+  endpoints:
+    # 搜索股票
+    search_stock: "/search/stock"
+
+    # 获取帖子列表
+    stock_posts: "/post/list"
+
+    # 获取帖子详情
+    post_detail: "/post/detail"
+
+    # 获取评论列表
+    post_comments: "/comment/list"
+
+    # 获取评论回复
+    comment_replies: "/reply/list"
+
+    # 获取用户信息
+    user_info: "/user/info"
+
+  # 请求头
+  headers:
+    User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    Referer: "https://guba.eastmoney.com/"
+    Accept: "application/json, text/plain, */*"
+    Accept-Language: "zh-CN,zh;q=0.9,en;q=0.8"
+    Accept-Encoding: "gzip, deflate, br"
+    Connection: "keep-alive"
+
+  # 签名配置
+  requires_signature: false  # 东方财富不需要签名
+  signature_service:
+    type: "none"
+
+  # 认证配置
+  requires_authentication: false  # 可选登录
+  authentication:
+    type: "cookie"
+    cookie_fields:
+      - "em_hq_fls"  # 用户标识
+      - "HAList"     # 历史浏览
+    optional: true    # 认证是可选的
+
+# 平台功能特性
+features:
+  # 支持的爬虫类型
+  supported_crawl_types:
+    - search      # 按股票代码搜索帖子
+    - detail      # 帖子详情
+    - creator     # 用户主页
+
+  # 支持的内容类型
+  supported_content_types:
+    - post        # 股吧帖子
+    - reply       # 回复
+
+  # 功能开关
+  enable_comments: true           # 支持爬取评论
+  enable_replies: true            # 支持爬取回复
+  enable_creator_info: true       # 支持爬取用户信息
+  enable_stock_info: true         # 支持爬取股票信息
+
+  # 特色功能
+  special_features:
+    - stock_based_search          # 基于股票代码搜索
+    - real_time_discussion        # 实时讨论
+    - user_sentiment_analysis     # 用户情绪分析
+    - hot_topic_tracking          # 热门话题跟踪
+
+# 字段映射配置
+fields:
+  # 帖子字段映射（原始字段 -> 标准字段）
+  content:
+    # 基础信息
+    id: "post_id"
+    title: "post_title"
+    content: "post_content"
+    url_template: "https://guba.eastmoney.com/news,{stock_code},{post_id}.html"
+
+    # 作者信息
+    author_id: "user_id"
+    author_name: "user_nickname"
+    author_avatar: "user_avatar"
+
+    # 时间信息
+    publish_time: "post_publish_time"
+    update_time: "post_last_time"
+
+    # 统计信息
+    read_count: "post_click_count"
+    comment_count: "post_comment_count"
+    like_count: "post_like_count"
+
+    # 股票相关
+    stock_code: "code"
+    stock_name: "code_name"
+
+    # 帖子类型
+    post_type: "post_type"  # 1=普通帖子, 2=精华帖, 3=置顶帖
+
+    # 额外信息
+    extra:
+      - "post_level"        # 帖子等级
+      - "is_essence"        # 是否精华
+      - "is_top"            # 是否置顶
+
+  # 评论字段映射
+  comment:
+    id: "comment_id"
+    content: "comment_content"
+    author_id: "user_id"
+    author_name: "user_nickname"
+    create_time: "comment_time"
+    like_count: "like_count"
+    reply_count: "reply_count"
+    parent_id: "reply_user_id"  # 回复的评论ID
+    post_id: "post_id"
+
+  # 用户字段映射
+  creator:
+    user_id: "user_id"
+    nickname: "user_nickname"
+    avatar: "user_avatar"
+    level: "user_level"
+    fans_count: "fans_count"
+    follow_count: "follow_count"
+    post_count: "post_count"
+    influence_score: "influence"
+
+# 分页配置
+pagination:
+  type: "page"  # page | cursor | offset
+
+  # 页码参数
+  page_field: "page"
+  page_size_field: "limit"
+
+  # 默认值
+  default_page: 1
+  default_page_size: 20
+
+  # 最大值
+  max_page_size: 100
+  max_pages: 50  # 最多爬取50页
+
+  # 响应字段
+  response:
+    total_field: "total"
+    has_more_field: "has_more"
+    data_field: "data.list"
+
+# 请求参数模板
+request_params:
+  # 搜索股票
+  search_stock:
+    method: "GET"
+    params:
+      q: "{keyword}"  # 搜索关键词
+
+  # 获取帖子列表
+  stock_posts:
+    method: "GET"
+    params:
+      code: "{stock_code}"  # 股票代码（如 000001）
+      page: "{page}"
+      limit: "{limit}"
+      sort: 1  # 1=最新, 2=最热, 3=精华
+
+  # 获取帖子详情
+  post_detail:
+    method: "GET"
+    params:
+      post_id: "{post_id}"
+
+  # 获取评论列表
+  post_comments:
+    method: "GET"
+    params:
+      post_id: "{post_id}"
+      page: "{page}"
+      limit: "{limit}"
+
+  # 获取评论回复
+  comment_replies:
+    method: "GET"
+    params:
+      comment_id: "{comment_id}"
+      page: "{page}"
+      limit: "{limit}"
+
+# 速率限制配置
+rate_limit:
+  # 请求频率限制
+  requests_per_second: 2     # 每秒最多2个请求
+  requests_per_minute: 60    # 每分钟最多60个请求
+  requests_per_hour: 1000    # 每小时最多1000个请求
+
+  # 并发限制
+  concurrent_requests: 3     # 同时最多3个请求
+
+  # 重试配置
+  retry_times: 3             # 失败重试次数
+  retry_delay: 2             # 重试延迟（秒）
+  retry_exponential: true    # 指数退避
+
+  # 请求间隔
+  request_delay:
+    min: 1.0                 # 最小延迟（秒）
+    max: 3.0                 # 最大延迟（秒）
+    jitter: 0.5              # 随机抖动（秒）
+
+# 并发控制
+concurrency:
+  # 任务并发数
+  max_content_tasks: 5       # 最多5个内容爬取任务并发
+  max_comment_tasks: 3       # 最多3个评论爬取任务并发
+
+  # 信号量配置
+  semaphore:
+    content: 5
+    comment: 3
+    creator: 2
+
+# 断点续爬配置
+checkpoint:
+  enable: true                # 启用断点续爬
+  storage: "file"             # file | redis
+
+  # 文件存储配置
+  file:
+    path: "checkpoints/eastmoney"
+    format: "json"            # json | pickle
+
+  # Redis存储配置
+  redis:
+    key_prefix: "checkpoint:eastmoney:"
+    expire: 86400             # 24小时过期
+
+# 数据存储配置
+data_storage:
+  # 支持的格式
+  formats:
+    - csv
+    - json
+    - db
+
+  # CSV配置
+  csv:
+    path: "data/eastmoney"
+    encoding: "utf-8-sig"
+    columns:
+      content:
+        - post_id
+        - title
+        - content
+        - stock_code
+        - stock_name
+        - author_name
+        - publish_time
+        - like_count
+        - comment_count
+      comment:
+        - comment_id
+        - post_id
+        - content
+        - author_name
+        - create_time
+        - like_count
+
+  # JSON配置
+  json:
+    path: "data/eastmoney"
+    indent: 2
+    ensure_ascii: false
+
+  # 数据库配置
+  db:
+    table_prefix: "eastmoney_"
+    tables:
+      content: "posts"
+      comment: "comments"
+      creator: "users"
+
+# 数据处理配置
+data_processing:
+  # 数据清洗
+  cleaning:
+    remove_html_tags: true       # 移除HTML标签
+    remove_extra_spaces: true    # 移除多余空格
+    normalize_time_format: true  # 统一时间格式
+
+  # 数据转换
+  transformation:
+    time_format: "%Y-%m-%d %H:%M:%S"
+    number_format: "int"
+
+  # 数据验证
+  validation:
+    required_fields:             # 必需字段
+      content:
+        - id
+        - title
+        - stock_code
+      comment:
+        - id
+        - content
+        - post_id
+
+    field_types:                 # 字段类型
+      like_count: "int"
+      comment_count: "int"
+      publish_time: "datetime"
+
+# 错误处理配置
+error_handling:
+  # 错误类型映射
+  error_mapping:
+    300012: "IP_BLOCK"           # IP被封
+    300013: "RATE_LIMIT"          # 访问频繁
+    -100: "SESSION_EXPIRED"       # 登录过期
+    404: "NOT_FOUND"              # 资源不存在
+
+  # 重试策略
+  retry_on:
+    - "IP_BLOCK"
+    - "RATE_LIMIT"
+    - "NETWORK_ERROR"
+
+  # 不重试
+  no_retry_on:
+    - "NOT_FOUND"
+    - "SESSION_EXPIRED"
+
+  # 降级策略
+  fallback:
+    enable: true
+    strategy: "skip"  # skip | cache | default
+
+# 日志配置
+logging:
+  level: "INFO"
+  format: "[%(asctime)s] [%(levelname)s] [EastMoney] %(message)s"
+  file: "logs/eastmoney_{date}.log"
+
+  # 记录内容
+  log_requests: true            # 记录请求
+  log_responses: false          # 不记录响应（太大）
+  log_errors: true              # 记录错误
+
+# 监控配置
+monitoring:
+  enable: true
+
+  # 统计指标
+  metrics:
+    - "total_requests"          # 总请求数
+    - "success_requests"        # 成功请求数
+    - "failed_requests"         # 失败请求数
+    - "retry_requests"          # 重试请求数
+    - "crawled_posts"           # 爬取帖子数
+    - "crawled_comments"        # 爬取评论数
+    - "average_response_time"   # 平均响应时间
+
+  # 报警配置
+  alerts:
+    - type: "failure_rate"
+      threshold: 0.3            # 失败率超过30%报警
+    - type: "response_time"
+      threshold: 5000           # 响应时间超过5秒报警
+
+# 扩展配置（平台特定）
+extensions:
+  # 股票相关
+  stock:
+    # 支持的市场
+    markets:
+      - "sh"   # 上海证券交易所
+      - "sz"   # 深圳证券交易所
+      - "bj"   # 北京证券交易所
+
+    # 股票代码格式
+    code_format:
+      sh: "^(60|688|689)\\d{4}$"
+      sz: "^(00|30)\\d{4}$"
+      bj: "^(43|83|87)\\d{4}$"
+
+  # 情绪分析
+  sentiment:
+    enable: true
+    keywords:
+      positive: ["看多", "上涨", "利好", "买入"]
+      negative: ["看空", "下跌", "利空", "卖出"]
+      neutral: ["观望", "持有", "震荡"]
