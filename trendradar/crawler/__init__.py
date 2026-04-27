@@ -11,6 +11,14 @@ TrendRadar 爬虫系统
 # 原有的 DataFetcher (NewsNow API)
 from trendradar.crawler.fetcher import DataFetcher
 
+# 东方财富爬虫模块
+from trendradar.crawler.eastmoney import (
+    EastMoneyCrawler,
+    EastMoneyClient,
+    crawl_eastmoney_stock,
+    crawl_eastmoney_stocks,
+)
+
 # 类型定义（最基础）
 from .types import (
     # 枚举
@@ -49,6 +57,12 @@ __version__ = "6.1.0"
 __all__ = [
     # 原有
     "DataFetcher",
+
+    # 东方财富爬虫
+    "EastMoneyCrawler",
+    "EastMoneyClient",
+    "crawl_eastmoney_stock",
+    "crawl_eastmoney_stocks",
 
     # 枚举
     "Platform",

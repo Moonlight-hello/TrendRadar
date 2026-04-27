@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # 智能监控服务
+  intelligent-monitor:
+    build: .
+    container_name: trendradar-intelligent-monitor
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./output:/app/output
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - trendradar-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Webhook接收器
+  webhook-receiver:
+    build: .
+    container_name: trendradar-webhook-receiver
+    command: python3 test_client.py server
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - trendradar-network
+    depends_on:
+      - intelligent-monitor
+
+networks:
+  trendradar-network:
+    driver: bridge
+
+volumes:
+  data:
+  logs:
+  output:

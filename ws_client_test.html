@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>股票监控 - 实时推送测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .status.connected {
+            background: #4CAF50;
+            color: white;
+        }
+        .status.disconnected {
+            background: #f44336;
+            color: white;
+        }
+        .status.connecting {
+            background: #ff9800;
+            color: white;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        input {
+            width: 200px;
+            margin-right: 10px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .messages {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 600px;
+            overflow-y: auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .message {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+            background: #f9f9f9;
+        }
+        .message.new-post {
+            border-left-color: #2196F3;
+        }
+        .message.new-comment {
+            border-left-color: #FF9800;
+        }
+        .message.stats {
+            border-left-color: #9C27B0;
+        }
+        .message.error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .message-type {
+            font-weight: bold;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .message-time {
+            color: #999;
+            font-size: 12px;
+            float: right;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📊 股票监控 - 实时推送测试</h1>
+
+    <div class="control-panel">
+        <div id="status" class="status disconnected">未连接</div>
+
+        <div>
+            <input type="text" id="stockCode" value="000973" placeholder="股票代码">
+            <button onclick="connect()">连接</button>
+            <button onclick="disconnect()">断开</button>
+            <button onclick="clearMessages()">清空消息</button>
+            <button onclick="triggerCrawl()">手动爬取</button>
+        </div>
+
+        <div class="stats-grid" id="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="postCount">-</div>
+                <div class="stat-label">帖子数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="commentCount">-</div>
+                <div class="stat-label">评论数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="latestTime">-</div>
+                <div class="stat-label">最新时间</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="messages" id="messages">
+        <p style="color: #999; text-align: center;">等待连接...</p>
+    </div>
+
+    <script>
+        let ws = null;
+        let currentStock = null;
+
+        function updateStatus(status, text) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'status ' + status;
+            statusEl.textContent = text;
+        }
+
+        function addMessage(type, data) {
+            const messagesEl = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + type;
+
+            const time = new Date().toLocaleTimeString();
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'message-time';
+            timeSpan.textContent = time;
+
+            const typeSpan = document.createElement('div');
+            typeSpan.className = 'message-type';
+            typeSpan.textContent = type;
+
+            const content = document.createElement('div');
+            content.innerHTML = formatMessage(type, data);
+
+            messageDiv.appendChild(timeSpan);
+            messageDiv.appendChild(typeSpan);
+            messageDiv.appendChild(content);
+
+            messagesEl.insertBefore(messageDiv, messagesEl.firstChild);
+
+            // 保持最多50条消息
+            while (messagesEl.children.length > 50) {
+                messagesEl.removeChild(messagesEl.lastChild);
+            }
+        }
+
+        function formatMessage(type, data) {
+            switch(type) {
+                case 'connected':
+                    return `<strong>已连接到股票 ${data.stock_code}</strong>`;
+
+                case 'new-post':
+                    return `<strong>🆕 新增 ${data.count} 条帖子</strong><br>` +
+                           data.data.slice(0, 3).map(p =>
+                               `• ${p.title}<br>&nbsp;&nbsp;作者: ${p.author_name} | 评论: ${p.comment_count}`
+                           ).join('<br>');
+
+                case 'new-comment':
+                    return `<strong>💬 新增 ${data.count} 条评论</strong><br>` +
+                           data.data.slice(0, 3).map(c =>
+                               `• ${c.author_name}: ${c.content.substring(0, 50)}...`
+                           ).join('<br>');
+
+                case 'stats':
+                    updateStats(data.data);
+                    return `<strong>📊 统计信息已更新</strong>`;
+
+                case 'error':
+                    return `<strong>❌ 错误:</strong> ${data.message}`;
+
+                default:
+                    return '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('postCount').textContent = stats.post_count;
+            document.getElementById('commentCount').textContent = stats.comment_count;
+            document.getElementById('latestTime').textContent =
+                stats.latest_post_time ? stats.latest_post_time.substring(0, 16) : '-';
+        }
+
+        function connect() {
+            if (ws) {
+                alert('已经连接了');
+                return;
+            }
+
+            const stockCode = document.getElementById('stockCode').value;
+            if (!stockCode) {
+                alert('请输入股票代码');
+                return;
+            }
+
+            currentStock = stockCode;
+            updateStatus('connecting', '连接中...');
+
+            ws = new WebSocket(`ws://localhost:8000/ws/${stockCode}`);
+
+            ws.onopen = () => {
+                updateStatus('connected', `已连接 - ${stockCode}`);
+                addMessage('connected', {stock_code: stockCode});
+
+                // 启动心跳
+                setInterval(() => {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send('ping');
+                    }
+                }, 30000);
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('收到消息:', data);
+
+                if (data.type === 'pong') return;
+
+                addMessage(data.type, data);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket错误:', error);
+                addMessage('error', {message: '连接出错'});
+            };
+
+            ws.onclose = () => {
+                updateStatus('disconnected', '未连接');
+                addMessage('error', {message: '连接已断开'});
+                ws = null;
+            };
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                updateStatus('disconnected', '未连接');
+            }
+        }
+
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+
+        async function triggerCrawl() {
+            if (!currentStock) {
+                alert('请先连接');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/api/monitor', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        stock_code: currentStock,
+                        max_pages: 2,
+                        max_comments_per_post: 30
+                    })
+                });
+
+                const result = await response.json();
+                addMessage('info', {message: result.message});
+            } catch (error) {
+                alert('爬取失败: ' + error);
+            }
+        }
+
+        // 页面加载时自动连接
+        window.onload = () => {
+            // 可以取消这行注释来自动连接
+            // connect();
+        };
+    </script>
+</body>
+</html>

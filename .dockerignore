@@ -1,35 +1,54 @@
-.git/
+# Git
+.git
 .gitignore
-*.md
-README.md
 
-output/
-
-__pycache__/
+# Python
+__pycache__
 *.pyc
 *.pyo
 *.pyd
 .Python
 *.so
-.pytest_cache/
+*.egg
+*.egg-info
+dist
+build
+venv
+env
+ENV
 
-.vscode/
-.idea/
+# Database (会在容器中重新创建)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Output
+output/
+
+# IDE
+.vscode
+.idea
 *.swp
 *.swo
-*~
 
+# OS
 .DS_Store
 Thumbs.db
 
-docker/.env
+# Test
+.pytest_cache
+.coverage
+htmlcov
 
-_image/
+# Temporary
+*.tmp
+*.pid
+deployment_status.txt
 
-.github/
-
-*.log
-.env.local
-.env.*.local
-version
-index.html
+# SSH keys
+id_rsa*
+*.pub
